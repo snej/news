@@ -374,12 +374,13 @@ proc send*(ws: WebSocket, text: string, opcode = Opcode.Text): Future[void] {.as
     # with really large packets
     var i = 0
     while i < frame.len:
+      if i > 0:
+        await sleepAsync(1)
       let data = frame[i ..< min(frame.len, i + maxSize)]
       if ws.transp.isClosed:
         raise newException(WebSocketClosedError, "Socket closed")
       await ws.transp.send(data)
       i += maxSize
-      await sleepAsync(1)
   except CatchableError as e:
     if ws.transp.isClosed:
       ws.readyState = Closed
